@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecommerce de Parlantes</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 56px;
+        font-family: Arial, sans-serif;
+      }
+
+      .filters {
+        margin-bottom: 20px;
+      }
+
+      .product {
+        display: none;
+      }
+
+      .card {
+        transition: transform 0.2s;
+        margin-bottom: 20px;
+      }
+
+      .card img {
+        height: 200px;
+        object-fit: cover;
+      }
+
+      .card:hover {
+        transform: scale(1.05);
+      }
+
+      .navbar-brand {
+        font-weight: bold;
+      }
+
+      .sub-filters label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .sub-filters input {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Ecommerce de Parlantes</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#">Inicio</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="product.html">Productos</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="cart.html">Carrito</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="login.html">Iniciar Sesión</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="register.html">Registrarse</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-lg-3">
+          <div class="filters">
+            <h4>Filtros</h4>
+            <form id="filters-form">
+              <div class="form-group">
+                <label>Categorías</label>
+                <br>
+                <input type="checkbox" name="category" value="all" id="all-products" checked> Todos los productos <br>
+                <input type="checkbox" name="category" value="speakers"> Parlantes <br>
+                <input type="checkbox" name="category" value="headphones"> Auriculares <br>
+                <input type="checkbox" name="category" value="televisions"> Televisión <br>
+                <input type="checkbox" name="category" value="soundbars"> Barras de sonido <br>
+                <input type="checkbox" name="category" value="accessories"> Accesorios <br>
+              </div>
+              <div class="form-group sub-filters" id="sub-filters">
+                <!-- Sub-filters will be dynamically added here -->
+              </div>
+              <div class="form-group">
+                <label for="price-range">Rango de Precio</label>
+                <input type="range" class="form-control-range" id="price-range" name="price-range" min="10" max="1000" step="10" value="1000">
+                <span id="price-range-value">1000</span>
+              </div>
+              <button type="button" class="btn btn-secondary" id="reset-filters">Borrar</button>
+              <button type="button" class="btn btn-primary" id="sort-price-asc">Ordenar por Precio (Asc)</button>
+              <button type="button" class="btn btn-primary" id="sort-price-desc">Ordenar por Precio (Desc)</button>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <div class="row" id="product-list">
+            <!-- Aquí se cargarán los productos -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('filters-form');
+        const productList = document.getElementById('product-list');
+        const priceRange = document.getElementById('price-range');
+        const priceRangeValue = document.getElementById('price-range-value');
+        const allProductsCheckbox = document.getElementById('all-products');
+        const subFiltersDiv = document.getElementById('sub-filters');
+        const subFilters = {
+          speakers: ['Inalámbrico', 'Con cable', 'Equipo de música'],
+          headphones: ['Bluetooth', 'Cable'],
+          televisions: ['Normal', 'SmartTV', 'HD', 'FullHD', '4K'],
+          soundbars: ['Cable', 'Inalámbrico'],
+          accessories: ['Cable USB', 'Cargador Cable', 'Cargador Inalámbrico', 'Cable de Audio', 'Cable HDMI']
+        };
+
+        priceRange.addEventListener('input', function() {
+          priceRangeValue.textContent = this.value;
+          applyFilters();
+        });
+
+        form.addEventListener('change', function(event) {
+          if (event.target.name === 'category') {
+            updateSubFilters();
+          }
+          applyFilters();
+        });
+
+        document.getElementById('reset-filters').addEventListener('click', function() {
+          form.reset();
+          allProductsCheckbox.checked = true;
+          priceRange.value = 1000;
+          priceRangeValue.textContent = 1000;
+          updateSubFilters();
+          applyFilters();
+        });
+
+        document.getElementById('sort-price-asc').addEventListener('click', function() {
+          sortProducts('asc');
+        });
+
+        document.getElementById('sort-price-desc').addEventListener('click', function() {
+          sortProducts('desc');
+        });
+
+        function updateSubFilters() {
+          subFiltersDiv.innerHTML = ''; 
+          const selectedCategories = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+          selectedCategories.forEach(category => {
+            if (subFilters[category]) {
+              const label = document.createElement('label');
+              label.textContent = `${category.charAt(0).toUpperCase() + category.slice(1)}:`;
+              subFiltersDiv.appendChild(label);
+              subFilters[category].forEach(subFilter => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'sub-filter';
+                checkbox.value = subFilter.toLowerCase().replace(/ /g, '-');
+                subFiltersDiv.appendChild(checkbox);
+                subFiltersDiv.appendChild(document.createTextNode(` ${subFilter}`));
+                subFiltersDiv.appendChild(document.createElement('br'));
+              });
+            }
+          });
+        }
+
+        function applyFilters() {
+          const formData = new FormData(form);
+          const categories = formData.getAll('category');
+          const subFilters = formData.getAll('sub-filter');
+          const price = formData.get('price-range');
+          const allProductsChecked = allProductsCheckbox.checked;
+
+          const products = document.querySelectorAll('.product');
+          products.forEach(product => {
+            const productCategory = product.getAttribute('data-category');
+            const productSubFilter = product.getAttribute('data-sub-filter');
+            const productPrice = parseFloat(product.getAttribute('data-price'));
+            const categoryMatch = categories.includes(productCategory) || categories.includes('all');
+            const subFilterMatch = subFilters.length === 0 || subFilters.includes(productSubFilter);
+            const priceMatch = productPrice <= parseFloat(price);
+            if (allProductsChecked || (categoryMatch && subFilterMatch && priceMatch)) {
+              product.style.display = 'block';
+            } else {
+              product.style.display = 'none';
+            }
+          });
+        }
+
+        function sortProducts(order) {
+          const products = Array.from(document.querySelectorAll('.product'));
+          products.sort((a, b) => {
+            const priceA = parseFloat(a.getAttribute('data-price'));
+            const priceB = parseFloat(b.getAttribute('data-price'));
+            return order === 'asc' ? priceA - priceB : priceB - priceA;
+          });
+          products.forEach(product => productList.appendChild(product));
+        }
+
+        // Datos de productos simulados
+        const productsData = [{
+            name: "Parlante X200",
+            category: "speakers",
+            subFilter: "inalámbrico",
+            price: 150,
+            image: "images/speaker_x200.jpg",
+            description: "Parlante"
+          }, {
+            name: "Parlante Y300",
+            category: "speakers",
+            subFilter: "con-cable",
+            price: 200,
+            image: "images/speaker_y300.jpg",
+            description: "Parlante"
+          }, {
+            name: "Equipo de Música Z300",
+            category: "speakers",
+            subFilter: "equipo-de-música",
+            price: 300,
+            image: "images/soundsystem_z300.jpg",
+            description: "Parlante"
+          }, {
+            name: "Audífonos A100",
+            category: "headphones",
+            subFilter: "bluetooth",
+            price: 50,
+            image: "images/headphones_a100.jpg",
+            description: "Auricular"
+          }, {
+            name: "Audífonos B200",
+            category: "headphones",
+            subFilter: "cable",
+            price: 80,
+            image: "images/headphones_b200.jpg",
+            description: "Auricular"
+          }, {
+            name: "Televisor HD C300",
+            category: "televisions",
+            subFilter: "hd",
+            price: 400,
+            image: "images/tv_hd_c300.jpg",
+            description: "Televisión"
+          }, {
+            name: "Televisor 4K D400",
+            category: "televisions",
+            subFilter: "4k",
+            price: 800,
+            image: "images/tv_4k_d400.jpg",
+            description: "Televisión"
+          }, {
+            name: "Televisor SmartTV E500",
+            category: "televisions",
+            subFilter: "smarttv",
+            price: 600,
+            image: "images/tv_smart_e500.jpg",
+            description: "Televisión"
+          }, {
+            name: "Barra de Sonido Cable H100",
+            category: "soundbars",
+            subFilter: "cable",
+            price: 150,
+            image: "images/soundbar_h100.jpg",
+            description: "Barra de sonido"
+          }, {
+            name: "Barra de Sonido Inalámbrica I200",
+            category: "soundbars",
+            subFilter: "inalámbrico",
+            price: 250,
+            image: "images/soundbar_i200.jpg",
+            description: "Barra de sonido"
+          }, {
+            name: "Cable USB",
+            category: "accessories",
+            subFilter: "cable-usb",
+            price: 10,
+            image: "images/usb_cable.jpg",
+            description: "Accesorio"
+          }, {
+            name: "Cargador Cable",
+            category: "accessories",
+            subFilter: "cargador-cable",
+            price: 20,
+            image: "images/charger_cable.jpg",
+            description: "Accesorio"
+          }, {
+            name: "Cargador Inalámbrico",
+            category: "accessories",
+            subFilter: "cargador-inalámbrico",
+            price: 30,
+            image: "images/wireless_charger.jpg",
+            description: "Accesorio"
+          }, {
+            name: "Cable de Audio",
+            category: "accessories",
+            subFilter: "cable-de-audio",
+            price: 15,
+            image: "images/audio_cable.jpg",
+            description: "Accesorio"
+          }, {
+            name: "Cable HDMI",
+            category: "accessories",
+            subFilter: "cable-hdmi",
+            price: 25,
+            image: "images/hdmi_cable.jpg",
+            description: "Accesorio"
+          }];
+
+        productsData.forEach(product => {
+          const productCard = `
+            <div class="col-lg-4 col-md-6 mb-4 product" data-category="${product.category}" data-sub-filter="${product.subFilter}" data-price="${product.price}">
+              <div class="card">
+                <img src="${product.image}" class="card-img-top" alt="${product.name}">
+                <div class="card-body">
+                  <h5 class="card-title">${product.name}</h5>
+                  <p class="card-text">${product.description}</p>
+                  <p class="card-text">
+                    <strong>$${product.price}</strong>
+                  </p>
+                  <button class="btn btn-primary add-to-cart" data-name="${product.name}" data-price="${product.price}">Agregar al Carrito</button>
+                </div>
+              </div>
+            </div>
+          `;
+          productList.insertAdjacentHTML('beforeend', productCard);
+        });
+
+        applyFilters(); 
+
+        document.addEventListener('click', function(event) {
+          if (event.target.classList.contains('add-to-cart')) {
+            const name = event.target.getAttribute('data-name');
+            const price = parseFloat(event.target.getAttribute('data-price'));
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingProduct = cart.find(product => product.name === name);
+            if (existingProduct) {
+              existingProduct.quantity += 1;
+            } else {
+              cart.push({
+                name: name,
+                price: price,
+                quantity: 1
+              });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Producto añadido al carrito');
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

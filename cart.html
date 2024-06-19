@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 56px;
+            font-family: Arial, sans-serif;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-item img {
+            max-width: 80px;
+            margin-right: 10px;
+        }
+        .cart-item-details {
+            flex: 1;
+        }
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+        }
+        .quantity {
+            width: 60px;
+            text-align: center;
+        }
+        .btn-remove {
+            margin-left: 10px;
+        }
+        .cart-total {
+            text-align: right;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">Ecommerce de Parlantes</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="product.html">Productos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.html">Carrito</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Iniciar Sesión</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register.html">Registrarse</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="cart-header">
+            <h2>Carrito de Compras</h2>
+            <button class="btn btn-danger" id="clear-cart">Vaciar Carrito</button>
+        </div>
+        <ul id="cartList" class="list-group mt-4"></ul>
+        <div class="cart-total">
+            Total: $<span id="total"></span>
+        </div>
+        <button class="btn btn-success btn-lg btn-block mt-4" id="checkout">Proceder al Pago</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cartList = document.getElementById('cartList');
+            const totalElement = document.getElementById('total');
+
+            function loadCart() {
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+                cartList.innerHTML = ''; // Clear the cart list
+
+                cart.forEach(product => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item cart-item';
+                    listItem.innerHTML = `
+                        <div class="cart-item-details">
+                            <strong>${product.name}</strong> - $${product.price}
+                        </div>
+                        <div class="cart-item-actions">
+                            <input type="number" class="quantity form-control" data-name="${product.name}" value="${product.quantity}" min="1">
+                            <button class="btn btn-danger btn-sm btn-remove" data-name="${product.name}">Eliminar</button>
+                        </div>
+                    `;
+                    cartList.appendChild(listItem);
+                });
+
+                updateTotal();
+            }
+
+            function updateTotal() {
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                const total = cart.reduce((sum, product) => sum + product.price * product.quantity, 0);
+                totalElement.textContent = total.toFixed(2);
+            }
+
+            cartList.addEventListener('change', function(event) {
+                if (event.target.classList.contains('quantity')) {
+                    const name = event.target.getAttribute('data-name');
+                    let newQuantity = parseInt(event.target.value);
+
+                    // Validar que newQuantity sea un número válido y mayor o igual a 1
+                    if (isNaN(newQuantity) || newQuantity <= 0) {
+                        newQuantity = 1; // Establecer 1 como cantidad predeterminada si no es válida
+                    }
+
+                    // Actualizar el valor del input para reflejar la cantidad válida
+                    event.target.value = newQuantity;
+
+                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const product = cart.find(product => product.name === name);
+
+                    if (product) {
+                        product.quantity = newQuantity;
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        updateTotal();
+                    }
+                }
+            });
+
+            cartList.addEventListener('click', function(event) {
+                if (event.target.classList.contains('btn-remove')) {
+                    const name = event.target.getAttribute('data-name');
+                    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    cart = cart.filter(product => product.name !== name);
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    loadCart();
+                }
+            });
+
+            document.getElementById('clear-cart').addEventListener('click', function () {
+                localStorage.removeItem('cart');
+                loadCart();
+            });
+
+            document.getElementById('checkout').addEventListener('click', function () {
+                alert('Procediendo al pago');
+            });
+
+            loadCart(); // Load cart items on page load
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+/* Estilos generales para todo el cuerpo de la página */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0; /* Color de fondo general */
+}
+
+/* Estilos para el encabezado */
+.jumbotron {
+    background-image: url('../images/encabezado.jpg');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    padding: 3rem;
+    margin-bottom: 2rem;
+    text-align: center; /* Alineación del texto */
+}
+
+/* Estilos para el contenido principal */
+.main-content {
+    padding: 20px;
+    background-color: #fff;
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+/* Estilos para el footer */
+footer {
+    background-image: url('../images/Fondo.jpg');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    padding: 20px 0;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
